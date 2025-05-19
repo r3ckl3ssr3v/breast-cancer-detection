@@ -1,36 +1,10 @@
 import os
 import argparse
-import requests
 import zipfile
 import tarfile
 import gzip
 import shutil
 from tqdm import tqdm
-
-def download_file(url, destination):
-    """
-    Download a file from a URL to a destination with progress bar.
-    
-    Args:
-        url: URL to download from
-        destination: Path to save the file
-    """
-    response = requests.get(url, stream=True)
-    total_size = int(response.headers.get('content-length', 0))
-    block_size = 1024  # 1 Kibibyte
-    
-    os.makedirs(os.path.dirname(destination), exist_ok=True)
-    
-    with open(destination, 'wb') as file, tqdm(
-            desc=os.path.basename(destination),
-            total=total_size,
-            unit='iB',
-            unit_scale=True,
-            unit_divisor=1024,
-        ) as bar:
-        for data in response.iter_content(block_size):
-            size = file.write(data)
-            bar.update(size)
 
 def extract_archive(archive_path, extract_dir):
     """
@@ -61,139 +35,135 @@ def extract_archive(archive_path, extract_dir):
     else:
         print(f"Unsupported archive format: {archive_path}")
 
-def download_cbis_ddsm():
-    """Download CBIS-DDSM dataset."""
-    base_url = "https://wiki.cancerimagingarchive.net/download/attachments/22516629/"
-    files = [
-        "mass_case_description_train_set.csv",
-        "calc_case_description_train_set.csv",
-        "mass_case_description_test_set.csv",
-        "calc_case_description_test_set.csv"
-    ]
-    
+def setup_cbis_ddsm():
+    """Setup directory for CBIS-DDSM dataset."""
     data_dir = "c:\\SDP_Project_P3\\data\\raw\\CBIS-DDSM"
     os.makedirs(data_dir, exist_ok=True)
     
-    print("Downloading CBIS-DDSM metadata...")
-    for file in files:
-        download_file(base_url + file, os.path.join(data_dir, file))
-    
-    print("CBIS-DDSM metadata downloaded.")
-    print("Note: The actual CBIS-DDSM images are very large (>100GB).")
-    print("Please download them manually from:")
-    print("https://wiki.cancerimagingarchive.net/display/Public/CBIS-DDSM")
-    print("or use a smaller subset for development.")
+    print(f"CBIS-DDSM directory created at: {data_dir}")
+    print("Please download the CBIS-DDSM dataset from Kaggle and place it in this directory.")
+    print("After downloading, extract any archive files to this location.")
+    print("Expected structure:")
+    print(f"{data_dir}\\")
+    print("  ├── mass_case_description_train_set.csv")
+    print("  ├── calc_case_description_train_set.csv")
+    print("  ├── mass_case_description_test_set.csv")
+    print("  ├── calc_case_description_test_set.csv")
+    print("  └── images/")
 
-def download_mias():
-    """Download MIAS dataset."""
+def setup_mias():
+    """Setup directory for MIAS dataset."""
     data_dir = "c:\\SDP_Project_P3\\data\\raw\\MIAS"
     os.makedirs(data_dir, exist_ok=True)
     
-    # Download images
-    images_url = "http://peipa.essex.ac.uk/pix/mias/all-mias.tar.gz"
-    images_path = os.path.join(data_dir, "all-mias.tar.gz")
-    
-    print("Downloading MIAS dataset...")
-    download_file(images_url, images_path)
-    
-    # Download info file
-    info_url = "http://peipa.essex.ac.uk/info/mias/info.txt"
-    info_path = os.path.join(data_dir, "info.txt")
-    download_file(info_url, info_path)
-    
-    # Extract images
-    extract_archive(images_path, data_dir)
-    
-    print("MIAS dataset downloaded and extracted.")
+    print(f"MIAS directory created at: {data_dir}")
+    print("Please download the MIAS dataset from Kaggle and place it in this directory.")
+    print("After downloading, extract any archive files to this location.")
+    print("Expected structure:")
+    print(f"{data_dir}\\")
+    print("  ├── info.txt (metadata file)")
+    print("  └── images/ (containing .pgm files)")
 
-def download_inbreast():
-    """Download INbreast dataset."""
+def setup_inbreast():
+    """Setup directory for INbreast dataset."""
     data_dir = "c:\\SDP_Project_P3\\data\\raw\\INbreast"
     os.makedirs(data_dir, exist_ok=True)
     
-    print("INbreast dataset requires registration.")
-    print("Please download it manually from:")
-    print("http://medicalresearch.inescporto.pt/breastresearch/index.php/Get_INbreast_Database")
-    print("and place the files in:", data_dir)
+    print(f"INbreast directory created at: {data_dir}")
+    print("Please download the INbreast dataset from Kaggle and place it in this directory.")
+    print("After downloading, extract any archive files to this location.")
+    print("Expected structure:")
+    print(f"{data_dir}\\")
+    print("  ├── metadata.csv")
+    print("  └── images/")
 
-def download_mini_ddsm():
-    """Download mini-DDSM dataset (a smaller subset for development)."""
+def setup_mini_ddsm():
+    """Setup directory for mini-DDSM dataset."""
     data_dir = "c:\\SDP_Project_P3\\data\\raw\\mini-DDSM"
     os.makedirs(data_dir, exist_ok=True)
     
-    # This is a placeholder for a smaller subset of DDSM
-    # In a real scenario, you would create or find a smaller subset
-    print("Creating mini-DDSM dataset for development...")
+    print(f"mini-DDSM directory created at: {data_dir}")
+    print("Please download the mini-DDSM dataset from Kaggle and place it in this directory.")
+    print("After downloading, extract any archive files to this location.")
+    print("Expected structure:")
+    print(f"{data_dir}\\")
+    print("  ├── normal/")
+    print("  ├── benign/")
+    print("  ├── malignant/")
+    print("  └── metadata.csv")
+
+def process_downloaded_data(dataset_name, archive_path=None):
+    """
+    Process already downloaded dataset archives.
     
-    # For demonstration, we'll create a small synthetic dataset
-    import numpy as np
-    from PIL import Image
+    Args:
+        dataset_name: Name of the dataset
+        archive_path: Path to the downloaded archive file
+    """
+    if not archive_path:
+        print(f"No archive path provided for {dataset_name}. Skipping extraction.")
+        return
     
-    # Create directories
-    os.makedirs(os.path.join(data_dir, "normal"), exist_ok=True)
-    os.makedirs(os.path.join(data_dir, "benign"), exist_ok=True)
-    os.makedirs(os.path.join(data_dir, "malignant"), exist_ok=True)
+    if not os.path.exists(archive_path):
+        print(f"Archive file not found: {archive_path}")
+        return
     
-    # Create synthetic images (just for demonstration)
-    for class_name, pattern in [("normal", "uniform"), ("benign", "circular"), ("malignant", "irregular")]:
-        for i in range(10):  # 10 images per class
-            img = np.zeros((224, 224), dtype=np.uint8)
-            
-            # Add some pattern based on class
-            if pattern == "uniform":
-                img = np.random.randint(100, 180, (224, 224), dtype=np.uint8)
-            elif pattern == "circular":
-                img = np.random.randint(100, 180, (224, 224), dtype=np.uint8)
-                center_x, center_y = np.random.randint(50, 174, 2)
-                radius = np.random.randint(10, 30)
-                for x in range(224):
-                    for y in range(224):
-                        if (x - center_x)**2 + (y - center_y)**2 < radius**2:
-                            img[y, x] = np.random.randint(180, 220)
-            elif pattern == "irregular":
-                img = np.random.randint(100, 180, (224, 224), dtype=np.uint8)
-                for _ in range(3):  # Multiple irregular regions
-                    center_x, center_y = np.random.randint(50, 174, 2)
-                    radius = np.random.randint(10, 30)
-                    for x in range(224):
-                        for y in range(224):
-                            dist = np.sqrt((x - center_x)**2 + (y - center_y)**2)
-                            if dist < radius + np.random.randint(-10, 10):
-                                img[y, x] = np.random.randint(180, 220)
-            
-            # Save image
-            Image.fromarray(img).save(os.path.join(data_dir, class_name, f"{class_name}_{i+1}.png"))
+    data_dir = f"c:\\SDP_Project_P3\\data\\raw\\{dataset_name}"
+    os.makedirs(data_dir, exist_ok=True)
     
-    # Create metadata file
-    with open(os.path.join(data_dir, "metadata.csv"), "w") as f:
-        f.write("image_path,class\n")
-        for class_name, class_id in [("normal", 0), ("benign", 1), ("malignant", 2)]:
-            for i in range(10):
-                f.write(f"{class_name}/{class_name}_{i+1}.png,{class_id}\n")
-    
-    print("Mini-DDSM dataset created for development.")
+    print(f"Processing downloaded {dataset_name} dataset...")
+    extract_archive(archive_path, data_dir)
+    print(f"{dataset_name} dataset extracted to {data_dir}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Download breast cancer datasets")
+    parser = argparse.ArgumentParser(description="Setup directories for breast cancer datasets")
     parser.add_argument("--datasets", nargs="+", default=["all"],
                         choices=["all", "cbis-ddsm", "mias", "inbreast", "mini-ddsm"],
-                        help="Datasets to download")
+                        help="Datasets to setup directories for")
+    parser.add_argument("--process", action="store_true",
+                        help="Process already downloaded archives")
+    parser.add_argument("--cbis-ddsm-archive", type=str, default=None,
+                        help="Path to downloaded CBIS-DDSM archive")
+    parser.add_argument("--mias-archive", type=str, default=None,
+                        help="Path to downloaded MIAS archive")
+    parser.add_argument("--inbreast-archive", type=str, default=None,
+                        help="Path to downloaded INbreast archive")
+    parser.add_argument("--mini-ddsm-archive", type=str, default=None,
+                        help="Path to downloaded mini-DDSM archive")
     
     args = parser.parse_args()
     
-    if "all" in args.datasets or "cbis-ddsm" in args.datasets:
-        download_cbis_ddsm()
+    if args.process:
+        # Process already downloaded archives
+        if "all" in args.datasets or "cbis-ddsm" in args.datasets:
+            process_downloaded_data("CBIS-DDSM", args.cbis_ddsm_archive)
+        
+        if "all" in args.datasets or "mias" in args.datasets:
+            process_downloaded_data("MIAS", args.mias_archive)
+        
+        if "all" in args.datasets or "inbreast" in args.datasets:
+            process_downloaded_data("INbreast", args.inbreast_archive)
+        
+        if "all" in args.datasets or "mini-ddsm" in args.datasets:
+            process_downloaded_data("mini-DDSM", args.mini_ddsm_archive)
+    else:
+        # Setup directories and provide instructions
+        if "all" in args.datasets or "cbis-ddsm" in args.datasets:
+            setup_cbis_ddsm()
+        
+        if "all" in args.datasets or "mias" in args.datasets:
+            setup_mias()
+        
+        if "all" in args.datasets or "inbreast" in args.datasets:
+            setup_inbreast()
+        
+        if "all" in args.datasets or "mini-ddsm" in args.datasets:
+            setup_mini_ddsm()
     
-    if "all" in args.datasets or "mias" in args.datasets:
-        download_mias()
-    
-    if "all" in args.datasets or "inbreast" in args.datasets:
-        download_inbreast()
-    
-    if "all" in args.datasets or "mini-ddsm" in args.datasets:
-        download_mini_ddsm()
-    
-    print("Dataset download complete.")
+    print("\nSetup complete. Please download the datasets from Kaggle and place them in the appropriate directories.")
+    print("After downloading, you can use the --process flag with the archive paths to extract them automatically.")
+    print("Example:")
+    print("python src\\data\\download_datasets.py --process --mias-archive=\"path\\to\\mias.zip\"")
 
 if __name__ == "__main__":
     main()
